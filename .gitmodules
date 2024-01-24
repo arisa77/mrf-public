@@ -1,0 +1,6 @@
+[submodule "external-code/ektelo"]
+	path = external-code/ektelo
+	url = https://github.com/dpcomp-org/ektelo.git
+[submodule "external-code/hdmm"]
+	path = external-code/hdmm
+	url = https://github.com/dpcomp-org/hdmm.git
