@@ -1,0 +1,30 @@
+{
+    "attributes": [
+      {
+        "name": "Left-Weight",
+        "type": "categorical",
+        "categories": [1,2,3,4,5]
+      },
+      {
+        "name": "Left-Distance",
+        "type": "categorical",
+        "categories": [1,2,3,4,5]
+      },
+      {
+        "name": "Right-Weight",
+        "type": "categorical",
+        "categories": [1,2,3,4,5]
+      },
+      {
+        "name": "Right-Distance",
+        "type": "categorical",
+        "categories": [1,2,3,4,5]
+      },
+      {
+        "name": "Class",
+        "type": "categorical",
+        "categories": ["L","B","R"]
+      }
+    ]
+  }
+  

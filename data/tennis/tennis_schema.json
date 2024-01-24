@@ -1,0 +1,35 @@
+{
+    "attributes": [
+      {
+        "name": "outlook",
+        "type": "categorical",
+        "categories": ["sunny","overcast","rainy"],
+        "categorical_type": "nominal"
+      },
+      {
+        "name": "temp",
+        "type": "categorical",
+        "categories": ["hot","mild","cool"],
+        "categorical_type": "nominal"
+      },
+      {
+        "name": "humidity",
+        "type": "categorical",
+        "categories": ["high","normal"],
+        "categorical_type": "nominal"
+      },
+      {
+        "name": "windy",
+        "type": "categorical",
+        "categories": [false,true],
+        "categorical_type": "nominal"
+      },
+      {
+        "name": "play",
+        "type": "categorical",
+        "categories": ["no","yes"],
+        "categorical_type": "nominal"
+      }
+    ]
+  }
+  

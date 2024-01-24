@@ -1,0 +1,85 @@
+{
+    "attributes": [
+      {
+        "name": "age",
+        "type": "numerical",
+        "categorical": true,
+        "categories": ["Young", "Middle-aged", "Senior","Elderly"],
+        "cutoffs": [40,55,65]
+      },
+      {
+        "name": "sex",
+        "type": "categorical",
+        "categories": [0,1]
+      },
+      {
+        "name": "cp",
+        "type": "categorical",
+        "categories": [0,1,2,3]
+      },
+      {
+        "name": "trestbps",
+        "type": "numerical",
+        "categorical": true,
+        "categories": ["Low", "Normal", "High"],
+        "cutoffs": [120, 140]
+      },
+      {
+        "name": "chol",
+        "type": "numerical",
+        "categorical": true,
+        "categories": ["Desirable", "Borderline High", "High"],
+        "cutoffs": [200, 240]
+      },
+      {
+        "name": "fbs",
+        "type": "categorical",
+        "categories": [0,1]
+      },
+      {
+        "name": "restecg",
+        "type": "categorical",
+        "categories": [0,1,2]
+      },
+      {
+        "name": "thalach",
+        "type": "numerical",
+        "categorical": true,
+        "categories": ["Low", "Normal", "High"],
+        "cutoffs": [130, 160]
+      },
+      {
+        "name": "exang",
+        "type": "categorical",
+        "categories": [0,1]
+      },
+      {
+        "name": "oldpeak",
+        "type": "numerical",
+        "categorical": true,
+        "categories": ["Mild", "Moderate", "Severe"],
+        "cutoffs": [1.0, 2.0]
+      },
+      {
+        "name": "slope",
+        "type": "categorical",
+        "categories": [0,1,2]
+      },
+      {
+        "name": "ca",
+        "type": "categorical",
+        "categories": [0,1,2,3]
+      },
+      {
+        "name": "thal",
+        "type": "categorical",
+        "categories": [0,1,2]
+      },
+      {
+        "name": "condition",
+        "type": "categorical",
+        "categories": [0,1]
+      }
+    ]
+  }
+  

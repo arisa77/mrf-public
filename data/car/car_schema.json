@@ -1,0 +1,40 @@
+{
+    "attributes": [
+      {
+        "name": "buying",
+        "type": "categorical",
+        "categories": ["vhigh","high","med","low"]
+      },
+      {
+        "name": "maint",
+        "type": "categorical",
+        "categories": ["vhigh","high","med","low"]
+      },
+      {
+        "name": "doors",
+        "type": "categorical",
+        "categories": ["2","3","4","5more"]
+      },
+      {
+        "name": "persons",
+        "type": "categorical",
+        "categories": ["2","4","more"]
+      },
+      {
+        "name": "lug_boot",
+        "type": "categorical",
+        "categories": ["small","med","big"]
+      },
+      {
+        "name": "safety",
+        "type": "categorical",
+        "categories": ["low","med","high"]
+      },
+      {
+        "name": "class",
+        "type": "categorical",
+        "categories": ["unacc","acc","good","vgood"]
+      }
+    ]
+  }
+  

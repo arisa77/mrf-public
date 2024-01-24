@@ -1,0 +1,5 @@
+method,depth,n_estimators,optimize,voting,n_samples,alg,eps,run,acc
+subsample,2,64,True,hard,30,ID3,2.0,0,0.36666666666666664
+subsample,2,64,False,hard,30,ID3,2.0,0,0.4666666666666667
+subsample,2,64,True,weight,30,ID3,2.0,0,0.7666666666666667
+subsample,2,64,False,weight,30,ID3,2.0,0,0.5333333333333333

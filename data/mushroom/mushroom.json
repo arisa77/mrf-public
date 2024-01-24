@@ -1,0 +1,119 @@
+{
+    "attributes": [
+      {
+        "name": "cap-shape",
+        "type": "categorical",
+        "categories": ["b","c","x","f","k","s"]
+      },
+      {
+        "name": "cap-surface",
+        "type": "categorical",
+        "categories": ["f","g","y","s"]
+      },
+      {
+        "name": "cap-color",
+        "type": "categorical",
+        "categories": ["n","b","c","g","r","p","u","e","w","y"]
+      },
+      {
+        "name": "bruises",
+        "type": "categorical",
+        "categories": ["t","f"]
+      },
+      {
+        "name": "odor",
+        "type": "categorical",
+        "categories": ["a","l","c","y","f","m","n","p","s"]
+      },
+      {
+        "name": "gill-attachment",
+        "type": "categorical",
+        "categories": ["a","d","f","n"]
+      },
+      {
+        "name": "gill-spacing",
+        "type": "categorical",
+        "categories": ["c","w","d"]
+      },
+      {
+        "name": "gill-size",
+        "type": "categorical",
+        "categories": ["b","n"]
+      },
+      {
+        "name": "gill-color",
+        "type": "categorical",
+        "categories": ["k","n","b","h","g","r","o","p","u","e","w","y"]
+      },
+      {
+        "name": "stalk-shape",
+        "type": "categorical",
+        "categories": ["e","t"]
+      },
+      {
+        "name": "stalk-root",
+        "type": "categorical",
+        "categories": ["b","c","u","e","z","r","?"]
+      },
+      {
+        "name": "stalk-surface-above-ring",
+        "type": "categorical",
+        "categories": ["f","y","k","s"]
+      },
+      {
+        "name": "stalk-surface-below-ring",
+        "type": "categorical",
+        "categories": ["f","y","k","s"]
+      },
+      {
+        "name": "stalk-color-above-ring",
+        "type": "categorical",
+        "categories": ["n","b","c","g","o","p","e","w","y"]
+      },
+      {
+        "name": "stalk-color-below-ring",
+        "type": "categorical",
+        "categories": ["n","b","c","g","o","p","e","w","y"]
+      },
+      {
+        "name": "veil-type",
+        "type": "categorical",
+        "categories": ["p","u"]
+      },
+      {
+        "name": "veil-color",
+        "type": "categorical",
+        "categories": ["n","o","w","y"]
+      },
+      {
+        "name": "ring-number",
+        "type": "categorical",
+        "categories": ["n","o","t"]
+      },
+      {
+        "name": "ring-type",
+        "type": "categorical",
+        "categories": ["c","e","f","l","n","p","s","z"]
+      },
+      {
+        "name": "spore-print-color",
+        "type": "categorical",
+        "categories": ["k","n","b","h","r","o","u","w","y"]
+      },
+      {
+        "name": "population",
+        "type": "categorical",
+        "categories": ["a","c","n","s","v","y"]
+      },
+      {
+        "name": "habitat",
+        "type": "categorical",
+        "categories": ["g","l","m","p","u","w","d"]
+      },
+      {
+        "name": "Class",
+        "type": "categorical",
+        "categories": ["e","p"]
+      }
+    ]
+  }
