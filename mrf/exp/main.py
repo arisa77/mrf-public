@@ -37,7 +37,6 @@ def main(main_config):
                     params['n_estimators'] = n_estimators
                     params['alg'] = alg
                     params['voting']='hard'
-                    print(params)
                     dfs.append(private_training.base_experiment(params, [traindata, testdata]))
         elif type=='prediction':
             for depth,n_estimators,alg in itertools.product(main_config['depth'], main_config['n_estimators'],main_config['alg']):
@@ -91,10 +90,28 @@ def sample_size(main_config):
     pd.concat(dfs).to_csv(main_config['output'], index=False)
 
 
-
+def run_default():
+    config={}
+    config['id'] = 0
+    config['type'] = ['training','prediction']
+    config['data'] = benchmark.car_dataset()
+    config['eps'] = [0.4,0.6,0.8,1.0,2.0]
+    config['depth'] = [2,3,4,5]
+    config['n_trials'] = 5
+    config['n_estimators']=[1,4,8,16,32,64,128]
+    config['training method'] = ['optimize', 'disjoint', 'original']
+    config['prediction method'] = ['subsample', 'batch']
+    config['sample size'] = [10,50,100,500,1000]
+    config['alg']=['ID3']
+    config['output']='temp/car_id_0.csv'
+    config['random_state'] = None
+    config['n_jobs'] = 8
+    
+    main(config)
 if __name__ == "__main__":
+    main_config = config.default()
     #main_config=config.config_car()
-    main_config=config.config_iris()
+    #main_config=config.config_iris()
     #main_config=config.config_adult()
     #main_config=config.config_tictactoe()
     #main_config = config.config_balancescale()

@@ -1,6 +1,6 @@
 import numpy as np
 import init
-from ektelo import matrix
+from hdmm import matrix
 from functools import reduce
 
 

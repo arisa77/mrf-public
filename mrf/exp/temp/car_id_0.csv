@@ -1,0 +1,10 @@
+method,depth,n_estimators,optimize,voting,n_samples,alg,eps,run,acc
+optimize,4,32,True,hard,346,ID3,1.0,0,0.7485549132947977
+disjoint,4,32,False,hard,346,ID3,1.0,0,0.43352601156069365
+original,4,32,False,hard,346,ID3,1.0,0,0.48265895953757226
+subsample,4,32,True,hard,346,ID3,1.0,0,0.5404624277456648
+subsample,4,32,False,hard,346,ID3,1.0,0,0.29190751445086704
+subsample,4,32,True,weight,346,ID3,1.0,0,0.4653179190751445
+subsample,4,32,False,weight,346,ID3,1.0,0,0.20809248554913296
+batch,4,32,True,weight,346,ID3,1.0,0,0.7572254335260116
+batch,4,32,False,weight,346,ID3,1.0,0,0.2514450867052023

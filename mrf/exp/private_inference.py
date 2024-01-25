@@ -2,7 +2,7 @@ import sys
 sys.path.append("../src")
 import init
 import benchmark
-from ektelo import workload
+from hdmm import workload
 from random_forest import ExtraTrees
 from mem_matrix import MemMatrix
 from dp_prediction import SubsampleAndAggregate,BatchPredict

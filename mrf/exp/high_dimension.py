@@ -10,7 +10,7 @@ from sklearn.metrics import accuracy_score
 import pandas as pd
 import itertools
 import private_training
-from ektelo import workload
+from hdmm import workload
 from os import cpu_count
 RANDOM_STATE = None
 N_JOBS = cpu_count()

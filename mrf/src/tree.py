@@ -4,7 +4,7 @@ import copy
 import numpy as np
 import init
 from dataset import Dataset
-from ektelo import workload, matrix
+from hdmm import workload, matrix
 from mem_matrix import MemMatrix
 import itertools
 class Tree:

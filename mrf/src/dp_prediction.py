@@ -1,7 +1,6 @@
 
 import init
-from ektelo import workload, matrix
-from hdmm import templates
+from hdmm import templates, workload, matrix
 import numpy as np
 import sys
 sys.path.append("../src")

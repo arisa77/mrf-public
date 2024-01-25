@@ -2,6 +2,24 @@ import sys
 sys.path.append("../src")
 import benchmark
 
+def default():
+    config={}
+    config['id'] = 0
+    config['type'] = ['training','prediction']
+    config['data'] = benchmark.car_dataset()
+    config['eps'] = [1.0]
+    config['depth'] = [4]
+    config['n_trials'] = 1
+    config['n_estimators']=[32]
+    config['training method'] = ['optimize', 'disjoint', 'original']
+    config['prediction method'] = ['subsample', 'batch']
+    config['sample size'] = []
+    config['alg']=['ID3']
+    config['output']='temp/car_id_0.csv'
+    config['random_state'] = None
+    config['n_jobs'] = 8
+    return config
+
 def config_adult():
     config={}
 

@@ -4,7 +4,7 @@ import pandas as pd
 from sklearn.metrics import accuracy_score
 from joblib import Parallel, delayed
 import init
-from ektelo import matrix
+from hdmm import matrix
 from mem_matrix import MemMatrix
 class EnsembleTrees:
     def __init__(self, schema, depth, n_estimators, bootstrap=False, disjoint=False, random_state=None, n_jobs=None):
