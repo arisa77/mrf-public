@@ -14,6 +14,7 @@ from hdmm import workload
 from os import cpu_count
 RANDOM_STATE = None
 N_JOBS = cpu_count()
+SAVE_DIR="temp/"
 def get_accuracy(testdata, preds):
     
     df_test = testdata.df
@@ -25,7 +26,7 @@ def get_accuracy(testdata, preds):
     return results
 
 def run_batchtrain(params, schema, traindata, testdata, random_state=None):
-    dpcls = DPVerticalExtraTrees(schema, params['depth'], params['n_estimators'], n_ensembles=params['n_ensembles'], random_state=random_state,n_jobs=params['n_jobs'],alg=params['alg'])
+    dpcls = DPVerticalExtraTrees(schema, params['depth'], params['n_estimators'], n_ensembles=params['n_ensembles'], max_nfeatures=params['max_nfeatures'], random_state=random_state,n_jobs=params['n_jobs'],alg=params['alg'])
     dpcls.fit(traindata,eps=None) # train without DP
     counts = dpcls.get_leaf_counts()
 
@@ -51,7 +52,8 @@ def run_batchtrain(params, schema, traindata, testdata, random_state=None):
     return results
 
 def run_batchpred(params, schema, traindata, testdata, random_state=None):
-    trained_model =VerticalExtraTrees(schema, params['depth'], params['n_estimators'], n_ensembles=params['n_ensembles'], random_state=random_state,n_jobs=params['n_jobs'],alg=params['alg'])
+    
+    trained_model =VerticalExtraTrees(schema, params['depth'], params['n_estimators'], n_ensembles=params['n_ensembles'], max_nfeatures=params['max_nfeatures'] ,random_state=random_state,n_jobs=params['n_jobs'],alg=params['alg'])
     trained_model.fit(traindata) 
     votes = trained_model.predict(testdata, voting=params['voting'], return_votes=True) #(samples, classes)
         
@@ -76,11 +78,12 @@ def experiment(params, dataset,type):
 
     traindata = dataset[0]
     testdata = dataset[1]
+    vschema = traindata.schema.random_feature_subspace(params['max_nfeatures'],n_sets=params['n_ensembles'],random_state=params['random_state'])
     result = []
     if type == 'train':
-        pred = run_batchtrain(params, traindata.schema, traindata, testdata, random_state=params['random_state'])
+        pred = run_batchtrain(params, vschema, traindata, testdata, random_state=params['random_state'])
     elif type == 'pred':
-        pred = run_batchpred(params, traindata.schema, traindata, testdata, random_state=params['random_state'])
+        pred = run_batchpred(params, vschema, traindata, testdata, random_state=params['random_state'])
     
     acc = get_accuracy(testdata, pred)
 
@@ -102,6 +105,7 @@ def main(main_config):
               'n_trials':main_config['n_trials'],
               'eps':main_config['eps'],
               'n_ensembles':main_config['n_ensembles'],
+              'max_nfeatures':main_config['max_nfeatures'],
               'bootstrap':False,
               'disjoint':False
               }
@@ -149,22 +153,89 @@ def main(main_config):
         pd.concat(dfs).to_csv(main_config['output'], index=False)
 
 
+def baseline(main_config):
+
+    # Batch with LM
+    # Disjoint with LM
+    dfs = []
+    dataset = main_config['data']
+    traindata, testdata = dataset.train_test_split(0.2, random_state=100)
+
+
+    params = {'targetname':dataset.schema.attrnames[-1],
+              'random_state':main_config['random_state'],
+              'n_jobs':main_config['n_jobs'],
+              'n_trials':main_config['n_trials'],
+              'eps':main_config['eps'],
+              'n_ensembles':main_config['n_ensembles'],
+              'max_nfeatures':main_config['max_nfeatures'],
+              'bootstrap':False,
+              'disjoint':False
+              }
+    params['depth'] = main_config['depth'][0]
+    params['alg'] = main_config['alg'][0]
+    params['n_estimators'] = main_config['n_estimators'][0]
+    params['optimize']=False
+    params['voting']='hard'
+
+    
+    params['method'] = 'original'
+    print("running baseline batch LM:",params)
+    dfs.append(private_training.base_experiment(params, [traindata, testdata]))
+
+    params['method'] = 'disjoint'
+    params['disjoint'] = True
+    print("running baseline disjoint LM:",params)
+    dfs.append(private_training.base_experiment(params, [traindata, testdata]))
+
+    print(pd.concat(dfs))
+    pd.concat(dfs).to_csv(main_config['output'], index=False)
+
+
 
 def config_heart():
     config={}
+    # config['id'] = 1
+    # config['type'] = ['training']
+    # config['data'] = benchmark.heart_dataset()
+    # config['eps'] = [0.4,0.6,0.8,1.0,2.0]
+    # config['depth'] = [2]
+    # config['n_trials'] = 10
+    # config['n_estimators']=[102]
+    # config['n_ensembles']=3
+    # config['training method'] = ['optimize','original']
+    # config['alg']=['ID3']
+    # config['output']='temp/heart_nensembles3.csv'
+    # config['random_state'] = None
+    # config['n_jobs'] = 8
 
 
-    config['id'] = 2
+    # config['id'] = 2
+    # config['type'] = ['prediction','training']
+    # config['data'] = benchmark.heart_dataset()
+    # config['eps'] = [0.4,0.6,0.8,1.0,2.0]
+    # config['depth'] = [2]
+    # config['n_trials'] = 10
+    # config['n_estimators']=[102]
+    # config['n_ensembles']=3
+    # config['training method'] = ['optimize','original']
+    # config['alg']=['ID3']
+    # config['output']='temp/heart_nensembles3_2.csv'
+    # config['random_state'] = None
+    # config['n_jobs'] = 8
+
+    config['id'] = None
     config['type'] = ['prediction','training']
     config['data'] = benchmark.heart_dataset()
     config['eps'] = [0.4,0.6,0.8,1.0,2.0]
     config['depth'] = [2]
-    config['n_trials'] = 10
+    config['n_trials'] = 5
     config['n_estimators']=[102]
+    config['max_nfeatures']=4
     config['n_ensembles']=3
     config['training method'] = ['optimize','original']
     config['alg']=['ID3']
-    config['output']='temp/heart_nensembles3_2.csv'
+    config['output']='temp/heart_nensembles3_nfeatures4_2.csv'
     config['random_state'] = None
     config['n_jobs'] = 8
 
@@ -172,7 +243,21 @@ def config_heart():
 
 def config_mushroom():
     config={}
+    # config['id'] = 1
+    # config['type'] = ['training']
+    # config['data'] = benchmark.mushroom_dataset()
+    # config['eps'] = [0.01,0.03,0.05,0.1,0.2]
+    # config['depth'] = [3]
+    # config['n_trials'] = 5
+    # config['n_estimators']=[125]
+    # config['n_ensembles']=5
+    # config['training method'] = ['optimize','original']
+    # config['alg']=['ID3']
+    # config['output']='temp/mushroom_nensembles5.csv'
+    # config['random_state'] = None
+    # config['n_jobs'] = 8
 
+    '''
     config['id'] = 2
     config['type'] = ['prediction','training']
     config['data'] = benchmark.mushroom_dataset()
@@ -186,12 +271,129 @@ def config_mushroom():
     config['output']='temp/mushroom_nensembles5_2.csv'
     config['random_state'] = None
     config['n_jobs'] = 8
+    '''
+
+    config['id'] = 2
+    config['type'] = ['prediction','training']
+    config['data'] = benchmark.mushroom_dataset()
+    config['eps'] = [0.01,0.03,0.05,0.1,0.2]
+    config['depth'] = [3]
+    config['n_trials'] = 5
+    config['n_estimators']=[125]
+    config['n_ensembles']=5
+    config['max_nfeatures']=4
+    config['training method'] = ['optimize','original']
+    config['alg']=['ID3']
+    config['output']='temp/mushroom_nensembles5_nfeatures4_2.csv'
+    config['random_state'] = None
+    config['n_jobs'] = 8
+
+    return config
+
+def config_ads():
+    config={}
+    
+    config['id'] = 1
+    config['type'] = ['prediction','training']
+    config['data'] = benchmark.ads_dataset()
+    config['eps'] = [0.005,0.01,0.04,0.07,0.1]
+    config['depth'] = [8]
+    config['n_trials'] = 3
+    config['n_estimators']=[100]
+    config['n_ensembles']=5
+    config['training method'] = ['optimize','original']
+    config['alg']=['ID3']
+    config['max_nfeatures'] = 10
+    config['output']='temp/ads_nensembles10_1.csv'
+    config['random_state'] = None
+    config['n_jobs'] = 8
+
+    return config
+
+def config_adult_binary():
+    config={}
+    
+    config['id'] = 1
+    config['type'] = ['prediction','training']
+    config['data'] = benchmark.adult_binary_dataset()
+    config['eps'] = [0.001,0.003,0.005, 0.01]
+    config['depth'] = [8]#[8]
+    config['n_trials'] = 3
+    config['n_estimators']=[60]
+    config['n_ensembles']=3
+    config['training method'] = ['optimize','original']
+    config['alg']=['ID3']
+    config['max_nfeatures'] = 10
+    config['output']='temp/adult_binary_nensembles3_3.csv'
+    config['random_state'] = None
+    config['n_jobs'] = 8
+
+    return config
+
+
+def config_heart_baseline():
+    config={}
+   
+    config['id'] = None
+    config['data'] = benchmark.heart_dataset()
+    config['eps'] = [0.4,0.6,0.8,1.0,2.0]
+    config['depth'] = [2]
+    config['n_trials'] = 5
+    config['n_estimators']=[102]
+    config['max_nfeatures']=None
+    config['n_ensembles']=None
+    config['alg']=['ID3']
+    config['output']=SAVE_DIR+'heart_baseline3.csv'
+    config['random_state'] = None
+    config['n_jobs'] = 8
+
+    return config
+def config_mushroom_baseline():
+    config={}
+
+    config['id'] = 2
+
+    config['data'] = benchmark.mushroom_dataset()
+    config['eps'] = [0.01,0.03,0.05,0.1,0.2]
+    config['depth'] = [3]
+    config['n_trials'] = 5
+    config['n_estimators']=[125]
+    config['n_ensembles']=None
+    config['max_nfeatures']=None
+    config['alg']=['ID3']
+    config['output']=SAVE_DIR+'mushroom_baseline_2.csv'
+    config['random_state'] = None
+    config['n_jobs'] = 8
+
+    return config
+def config_adult_binary_baseline():
+    config={}
+    
+    config['id'] = 1
+    config['data'] = benchmark.adult_binary_dataset()
+    config['eps'] = [0.001,0.003,0.005, 0.01]
+    config['depth'] = [8]#[8]
+    config['n_trials'] = 3
+    config['n_estimators']=[60]
+    config['n_ensembles']=None
+    config['alg']=['ID3']
+    config['max_nfeatures'] = None
+    config['output']=SAVE_DIR+'adult_binary_baseline_3.csv'
+    config['random_state'] = None
+    config['n_jobs'] = 8
 
     return config
 
 if __name__ == "__main__":
     
-    main_config=config_heart()
+    #main_config=config_heart()
     #main_config=config_mushroom()
-    main(main_config)
+    #main_config=config_ads()
+    #main_config = config_adult_binary()
+    #main(main_config)
+
+    #main_config = config_heart_baseline()
+    #main_config = config_mushroom_baseline()
+    main_config = config_adult_binary_baseline()
+    baseline(main_config)
 
