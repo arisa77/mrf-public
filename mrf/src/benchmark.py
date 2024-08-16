@@ -3,7 +3,27 @@ from schema import Schema
 import pandas as pd
 import numpy as np
 import json
-
+def get_dataset(name):
+    if name == 'tennis':
+        return tennis_dataset()
+    elif name == 'heart':
+        return heart_dataset()
+    elif name =='adult':
+        return adult_dataset()
+    elif name=='car':
+        return car_dataset()
+    elif name=='tictactoe':
+        return tictactoe_dataset()
+    elif name=='iris':
+        return iris_dataset()
+    elif name=='balance':
+        return balancescale_dataset()
+    elif name=='mushroom':
+        return mushroom_dataset()
+    elif name=='ads':
+        return ads_dataset()
+    elif name=='adult_binary':
+        return adult_binary_dataset()
 
 def tennis_dataset():
     tennis= Dataset.load("../../data/tennis/tennis.csv", "../../data/tennis/tennis_schema.json")
@@ -44,6 +64,31 @@ def adult_dataset():
 
     return dataset
 
+def adult_binary_dataset():
+    df = pd.read_csv("../../data/adult-binary/adult-binary.csv")
+    
+    config = {"attributes":[]}
+    # the first four attributes will be dropped
+    # all 123 features are binary
+    # the last column is the class
+    for i in range(0,123):
+        config['attributes'].append({
+                "name": str(i),
+                "type": "categorical",
+                "categories": [0,1]
+            })
+    config['attributes'].append({
+        "name": "class",
+        "type": "categorical",
+        "categories": [-1,1]
+        })
+    
+
+    df = discretize_dataframe(df,config) # numerical encoding
+    schema = Schema.load(config)
+    dataset = Dataset(df, schema)
+    return dataset
+
 def car_dataset():
     car= Dataset.load("../../data/car/car.csv", "../../data/car/car_schema.json")
     return car
@@ -63,3 +108,36 @@ def balancescale_dataset():
 def mushroom_dataset():
     data = Dataset.load("../../data/mushroom/mushroom.csv","../../data/mushroom/mushroom.json")
     return data
+
+def ads_dataset():
+    df = pd.read_csv("../../data/internet-ads/ads.csv",header=None)
+    df=df.rename(columns={1558: 'class'}) # there are 1559 columns and the last column is the target class
+    df = df.drop(columns=[0, 1, 2, 3]) # drop the first 4 columns as there are many missing values
+
+    """
+    create a schema:
+        the first four attributes will be dropped
+        5th-1558th columns are binary
+        The last column is the class
+    """
+    config = {"attributes":[
+        {
+            "name": i,
+            "type": "categorical",
+            "categories": [0,1]
+        } 
+        for i in range(4,1558)
+        ]
+    }
+    config['attributes'].append({
+            "name": "class",
+            "type": "categorical",
+            "categories": ["nonad.","ad."]
+        })
+
+    df = discretize_dataframe(df,config) # numerical encoding
+    schema = Schema.load(config)
+    dataset = Dataset(df, schema)
+    return dataset
+
+

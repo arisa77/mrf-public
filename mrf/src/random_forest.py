@@ -87,6 +87,9 @@ class EnsembleTrees:
             print("%d estimator"%(i))
             estimator.print_tree()
 
+                   
+            
+
 class ExtraTrees(EnsembleTrees):
     def __init__(self, schema, depth, n_estimators, bootstrap=False, disjoint=False, random_state= None,n_jobs=None,alg='ID3'):
         self.estimators = []
@@ -124,7 +127,7 @@ class ExtraTrees(EnsembleTrees):
             )
         else:
             for i in range(self.n_estimators):
-                self.estimators[i].fit_request(datasets[i], decision_trees[i])
+                self.estimators[i]= self.estimators[i].fit_request(datasets[i], decision_trees[i])
         
 
     def get_forest(self):
@@ -145,10 +148,22 @@ class ExtraTrees(EnsembleTrees):
         for estimator in self.estimators:
             estimator.leaf_counts = counts[start:start+estimator.n_leaves]
             start+=estimator.n_leaves
+    
+    def update_forest(self, forest):
+        if self.n_jobs:
+            # parallel processing
+            self.estimators = Parallel(n_jobs=self.n_jobs, prefer='threads')(
+                delayed(estimator.update_tree)(forest[i])
+                for i, estimator in enumerate(self.estimators)
+            )
+        else:
+            self.estimators = [estimator.update_tree(forest[i]) for i, estimator in enumerate(self.estimators)]
+
 
     def inference_workload(self, samples):
-
+        
         leaves = self.apply(samples)
+        
         n_leaves = [estimator.n_leaves for estimator in self.estimators]
         cum_leaves = n_leaves[0]
         
@@ -182,11 +197,11 @@ class ExtraTrees(EnsembleTrees):
     @staticmethod
     def get_workload(paths):
         return ExtraTree.get_workload([path for subpaths in paths for path in subpaths])
-
+    
 
 
 class VerticalExtraTrees:
-    def __init__(self, schema, depth, n_estimators, n_ensembles=1, bootstrap=False, disjoint=False, random_state=None, n_jobs=None,alg='ID3'):
+    def __init__(self, schema, depth, n_estimators, n_ensembles=1, max_nfeatures=10, bootstrap=False, disjoint=False, random_state=None, n_jobs=None,alg='ID3'):
         if random_state is None:
             self.prng = np.random.mtrand._rand
         else:
@@ -201,89 +216,138 @@ class VerticalExtraTrees:
 
         self.n_ensembles=n_ensembles
         
-        features = list(schema.attrnames[:-1])
-        self.prng.shuffle(features)
-        subsets_features =np.array_split(features,n_ensembles)
-        targetname = schema.attrnames[-1]
+        assert len(schema) == n_ensembles
         self.ensembles = []
-        
-
-        for per_features in subsets_features:
-            per_features = per_features.tolist()
-            per_features.append(targetname)
-            per_schema = schema.project(per_features)
-            ensemble = ExtraTrees(per_schema, depth, n_estimators, bootstrap=bootstrap, disjoint=disjoint, random_state=random_state, n_jobs=n_jobs,alg=alg)
+        for i in range(n_ensembles):
+            ensemble = ExtraTrees(schema[i], depth, n_estimators, bootstrap=bootstrap, disjoint=disjoint, random_state=random_state, n_jobs=n_jobs,alg=alg)
             self.ensembles.append(ensemble)
 
-    def fit(self, datasets):
 
-        for ensemble in self.ensembles:
-            features = ensemble.schema.attrnames
-            per_datasets = datasets.project(features)
-            ensemble.fit(per_datasets)    
+    def fit(self, datasets):
+        if self.n_jobs:
+            Parallel(n_jobs=self.n_jobs, prefer='threads')(
+                    delayed(ensemble.fit)(datasets.project(ensemble.schema.attrnames))
+                    for ensemble in self.ensembles
+                )
+        else:
+            for ensemble in self.ensembles:
+                features = ensemble.schema.attrnames
+                per_datasets = datasets.project(features)
+                ensemble.fit(per_datasets)    
         
 
     def fit_request(self, datasets, decision_trees):
         assert len(decision_trees) == self.n_ensembles
 
-        for decision_trees_per_ensemble, ensemble in zip(decision_trees, self.ensembles):
-            features = ensemble.schema.attrnames
-            per_datasets = datasets.project(features)
-            ensemble.fit(per_datasets, decision_trees_per_ensemble) 
+        if self.n_jobs:
+            Parallel(n_jobs=self.n_jobs, prefer='threads')(
+                        delayed(ensemble.fit_request)(datasets.project(ensemble.schema.attrnames), decision_trees[i])
+                        for i, ensemble in enumerate(self.ensembles)
+                    )
+        else:
+            for decision_trees_per_ensemble, ensemble in zip(decision_trees, self.ensembles):
+                features = ensemble.schema.attrnames
+                per_datasets = datasets.project(features)
+                ensemble.fit_request(per_datasets, decision_trees_per_ensemble) 
 
     def get_forest(self):
-        return [ensemble.get_forest() for ensemble in self.ensembles]
+        if self.n_jobs:
+            return Parallel(n_jobs=self.n_jobs, prefer='threads')(
+                    delayed(ensemble.get_forest)()
+                    for ensemble in self.ensembles
+                )
+        else:
+            return [ensemble.get_forest() for ensemble in self.ensembles]
     
     def get_paths(self):
-        return [ensemble.get_paths() for ensemble in self.ensembles]
+        if self.n_jobs:
+            return Parallel(n_jobs=self.n_jobs, prefer='threads')(
+                    delayed(ensemble.get_paths)()
+                    for ensemble in self.ensembles
+                )
+        else:
+            return [ensemble.get_paths() for ensemble in self.ensembles]
     
     def get_leaf_counts(self):
-        return [ensemble.get_leaf_counts() for ensemble in self.ensembles]
+        if self.n_jobs:
+            return Parallel(n_jobs=self.n_jobs, prefer='threads')(
+                    delayed(ensemble.get_leaf_counts)()
+                    for ensemble in self.ensembles
+                )
+        else:
+            return [ensemble.get_leaf_counts() for ensemble in self.ensembles]
     
     def update_leaf_counts(self, counts):
         assert len(counts) == self.n_ensembles
-        for counts_per_ensemble, ensemble in zip(counts, self.ensembles):
-            ensemble.update_leaf_counts(counts_per_ensemble)
+        if self.n_jobs:
+            Parallel(n_jobs=self.n_jobs, prefer='threads')(
+                    delayed(ensemble.update_leaf_counts)(counts[i])
+                    for i, ensemble in enumerate(self.ensembles)
+                )
+        else:
+            for counts_per_ensemble, ensemble in zip(counts, self.ensembles):
+                ensemble.update_leaf_counts(counts_per_ensemble)
 
+    def update_forest(self, forest):
+        if self.n_jobs:
+            Parallel(n_jobs=self.n_jobs, prefer='threads')(
+                    delayed(ensemble.update_forest)(forest[i])
+                    for i, ensemble in enumerate(self.ensembles)
+                )
+        else:
+            for forest_per_ensemble, ensemble in zip(forest, self.ensembles):
+                ensemble.update_forest(forest_per_ensemble
+                                    )
     
     @staticmethod
     def decision_paths(schema, depth, n_estimators, n_ensembles, random_state = None, n_jobs = None, workload=False, tree=False,alg='ID3'):
-        if random_state is None:
-            prng = np.random.mtrand._rand
+    
+        # schema should be a list of schema objects
+        assert len(schema) == n_ensembles
+
+        if n_jobs:
+            return Parallel(n_jobs=n_jobs, prefer='threads')(
+                    delayed(ExtraTrees.decision_paths)(per_schema, depth, n_estimators, random_state=random_state, n_jobs=n_jobs,workload=workload,tree=tree,alg=alg)
+                    for per_schema in schema
+                )
         else:
-            prng = np.random.RandomState(random_state)
-      
-        features = list(schema.attrnames[:-1])
-        prng.shuffle(features)
-        subsets_features = np.array_split(features, n_ensembles)
-        targetname = schema.attrnames[-1]
-        results=[]
-        for per_features in subsets_features:
-            per_features = per_features.tolist()
-            per_features.append(targetname)
-            per_schema = schema.project(per_features)
-            result = ExtraTrees.decision_paths(per_schema, depth, n_estimators, random_state=random_state, n_jobs=n_jobs,workload=workload,tree=tree,alg=alg)
-            results.append(result)
-        return results
+            results = []
+            for per_schema in schema:
+                result = ExtraTrees.decision_paths(per_schema, depth, n_estimators, random_state=random_state, n_jobs=n_jobs,workload=workload,tree=tree,alg=alg)
+                results.append(result)
+            return results
 
 
     @staticmethod
-    def get_workload(paths):
+    def get_workload(paths, n_jobs=None):
+        
         # len(paths) == n_ensembles
-        Ws =[]
-        for paths_per_ensemble in paths:
-            W = ExtraTree.get_workload([path for subpaths in paths_per_ensemble for path in subpaths])
-            Ws.append(W)
-        return Ws
+        if n_jobs:
+            return Parallel(n_jobs=n_jobs, prefer='threads')(
+                    delayed(ExtraTree.get_workload)([path for subpaths in paths_per_ensemble for path in subpaths])
+                    for paths_per_ensemble in paths
+                )
+        else:
+            Ws =[]
+            for paths_per_ensemble in paths:
+                W = ExtraTree.get_workload([path for subpaths in paths_per_ensemble for path in subpaths])
+                Ws.append(W)
+            return Ws
     
 
     def inference_workload(self, samples):
-        W = []
-        for ensemble in self.ensembles:
-            features = ensemble.schema.attrnames
-            per_dataset = samples.project(features)
-            W.append(ensemble.inference_workload(per_dataset))
-        return W
+        if self.n_jobs:
+            return Parallel(n_jobs=self.n_jobs, prefer='threads')(
+                    delayed(ensemble.inference_workload)(samples.project(ensemble.schema.attrnames))
+                    for ensemble in self.ensembles
+                )
+        else:
+            W = []
+            for ensemble in self.ensembles:
+                features = ensemble.schema.attrnames
+                per_dataset = samples.project(features)
+                W.append(ensemble.inference_workload(per_dataset))
+            return W
 
     def predict(self, dataset, voting='hard', return_votes=False):
         '''
@@ -292,21 +356,36 @@ class VerticalExtraTrees:
         '''
             
         if return_votes:
-            votes_ensembles = []
-            for ensemble in self.ensembles:
-                features = ensemble.schema.attrnames
-                per_dataset = dataset.project(features)
-                votes = ensemble.predict(per_dataset,voting=voting,return_votes=True)
-                votes_ensembles.append(votes)
+            if self.n_jobs:
+            # parallel processing
+                votes_ensembles = Parallel(n_jobs=self.n_jobs, prefer='threads')(
+                    delayed(ensemble.predict)(dataset.project(ensemble.schema.attrnames),voting=voting,return_votes=True)
+                    for ensemble in self.ensembles
+                )
+            else:
+                votes_ensembles = []
+                for ensemble in self.ensembles:
+                    features = ensemble.schema.attrnames
+                    per_dataset = dataset.project(features)
+                    votes = ensemble.predict(per_dataset,voting=voting,return_votes=True)
+                    votes_ensembles.append(votes)
             return votes_ensembles
         else:
-            majority_votes = np.zeros((dataset.shape[0],self.schema.shape[-1]))
-            for ensemble in self.ensembles:
-                features = ensemble.schema.attrnames
-                per_dataset = dataset.project(features)
-                votes = ensemble.predict(per_dataset,voting=voting,return_votes=True)
-                
-                majority_votes+=votes
+            majority_votes = np.zeros((dataset.shape[0],self.schema[0].shape[-1]))
+            if self.n_jobs:
+                votes = Parallel(n_jobs=self.n_jobs, prefer='threads')(
+                    delayed(ensemble.predict)(dataset.project(ensemble.schema.attrnames),voting=voting,return_votes=True)
+                    for ensemble in self.ensembles
+                )
+                for votes_per_ensemble in votes:
+                    majority_votes += votes_per_ensemble
+            else:
+                for ensemble in self.ensembles:
+                    features = ensemble.schema.attrnames
+                    per_dataset = dataset.project(features)
+                    votes = ensemble.predict(per_dataset,voting=voting,return_votes=True)
+                    
+                    majority_votes+=votes
     
             return np.argmax(majority_votes,axis=1)
 
@@ -315,12 +394,18 @@ class VerticalExtraTrees:
         '''
         return leaf ids
         '''
-        leaf_ids = []
-        for ensemble in self.ensembles:
-            features = ensemble.schema.attrnames
-            per_dataset = dataset.project(features)
-            leaf_ids.append(ensemble.apply(per_dataset))
-        return leaf_ids
+        if self.n_jobs:
+            return Parallel(n_jobs=self.n_jobs, prefer='threads')(
+                    delayed(ensemble.apply)(dataset.project(ensemble.schema.attrnames))
+                    for ensemble in self.ensembles
+                )
+        else:
+            leaf_ids = []
+            for ensemble in self.ensembles:
+                features = ensemble.schema.attrnames
+                per_dataset = dataset.project(features)
+                leaf_ids.append(ensemble.apply(per_dataset))
+            return leaf_ids
     
     def print_forest(self):
         for i, ensemble in enumerate(self.ensembles):

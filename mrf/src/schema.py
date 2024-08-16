@@ -46,9 +46,36 @@ class Schema:
             attrs = [attrs]
         return Schema([self.config[a] for a in attrs])
     
-    @staticmethod
-    def load(path):
+    def random_feature_subspace(self, size, n_sets=1,random_state=None):
+        '''
+        randomly sample features of size 'size' without replacement (no duplicate features in a set)
+        if n_sets>1 then return a list of Schema objects
+        '''
 
-        config = json.load(open(path))
+        if random_state is None:
+            prng = np.random.mtrand._rand
+        else:
+            prng = np.random.RandomState(random_state)
+
+        features = self.attrnames[:-1]
+        targetname = self.attrnames[-1]
+        sets = []
+        for _ in range(n_sets):
+            per_features = np.array(features)[prng.choice(len(features), size, replace=False)].tolist()
+            per_features.append(targetname)
+            schema = self.project(per_features)
+            print(schema.attrnames, schema.shape)
+            sets.append(schema)
+        return sets
+    
+    @staticmethod
+    def load(config):
+        """ load the Schema object
+        
+        :param config: json path or dictionary
+        :return: Schema object
+        """
+        if not isinstance(config, dict):
+            config = json.load(open(config))
         attrs = [Attribute(attr_info['name'],attr_info['categories'],type='nominal' if attr_info['type']=='categorical' else 'ordinal') for attr_info in config['attributes']]
         return Schema(attrs)

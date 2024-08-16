@@ -457,6 +457,10 @@ class ExtraTree(Tree):
 
     def print_tree(self):
         return self.estimator.print_tree()
+    def update_tree(self, tree):
+        return self.estimator.update_tree(tree)
+        
+    
       
 class IExtraTree(ID3):
     def __init__(self, schema, depth, random_state = None):
@@ -531,6 +535,11 @@ class IExtraTree(ID3):
             subtree = self._fit_request(group_df, substructure[value])
             tree[attr][value] = subtree
         return tree
+    def update_tree(self,tree):
+        self.tree = tree['tree']
+        self.paths = tree['path']
+        self.n_leaves = len(tree['path'])
+        return self
 
 
 

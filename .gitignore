@@ -1,3 +1,6 @@
 .DS_Store
 **/__pycache__/
+exp/pub-result.ipynb
+exp/figures
+exp/temp
 
