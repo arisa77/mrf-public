@@ -51,10 +51,6 @@ class DPExtraTrees(ExtraTrees):
         A = pid.strategy()
         return MemMatrix(A)
     
-    
-
-
-
 
 class DPVerticalExtraTrees(VerticalExtraTrees):
     def __init__(self, schema, depth, n_estimators, n_ensembles=1,max_nfeatures=10, bootstrap=False, disjoint=False,random_state=None,n_jobs=None,alg='ID3'):
