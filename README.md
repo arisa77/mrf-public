@@ -1,3 +1,6 @@
+# MRF
+Source code for [Improving private random forest prediction using matrix representation](https://dl.acm.org/doi/10.1609/aaai.v39i19.34289),appeared in AAAI'25.
+
 # Implementation
 Main source codes of DP training and DP prediction methods for random forest classifiers are in the ```mrf/src``` folder.
 Source code used to generate the experimentation results and figures in the paper are in the ```mrf/exp``` folder. 
